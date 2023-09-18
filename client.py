@@ -1,6 +1,8 @@
 # importando biblioteca de socket
 import socket
 import pickle
+import os
+import hashlib
 
 # formato das mensagens, porta, ip do servidor, endereço e headersize para o pickle
 FORMAT = 'utf-8'
@@ -22,7 +24,7 @@ def main():
 
     while True:
         
-        message = input('\nDeseja (Sair), abrir o (Chat) ou ler um (NomeArquivo.ext):\n')
+        message = input('\nDeseja (Sair), abrir o (Chat) ou envie um (NomeArquivo.ext) para ver as opções: ')
         # mensagem enviada para o servidor
         info = {}
         info['process'] = "arquivo" # inicializa como arquivo por padrao
@@ -45,7 +47,6 @@ def main():
 
                 if data['status'] == 'Chat':
                     print("Servidor: " + data['message'])
-
         else:
             info['file'] = message     
              
@@ -57,7 +58,31 @@ def main():
 
         # se o status esta ok, printa arquivo
         if data['status'] == 'OK':
-            print(f"File name : {data['file']} \nStatus: {data['status']} \nFile size: {data['fileSize']} \nHash: {data['hash']} \nContent: {data['content']}")
+            message = input("digite (info) para ler o arquivo ou (baixar):")
+            if message.lower() == "info":
+                    print(f"File name : {data['file']} \nStatus: {data['status']} \nFile size: {data['fileSize']} \nHash: {data['hash']} \nContent: {data['content']}")
+            elif message.lower() =="baixar":
+                try:
+                    filename, filext = os.path.splitext(data['file'])
+                    file_name = filename + "Download" + filext
+                    file_content = data['content']
+                    with open(file_name, 'wb') as file:
+                        file.write(file_content.encode('utf-8'))
+                        print(f"Arquivo '{file_name}' baixado com sucesso.")
+                except Exception as e:
+                    print(f"Erro ao salvar o arquivo: {e}")
+                sha256_hash = hashlib.sha256() # define o hash
+                with open(file_name, 'rb') as file: # abre como binario
+                    for bloco in iter(lambda: file.read(4096), b""): # itera pelo arquivo pra fazer o hash
+                        sha256_hash.update(bloco)
+                        newFileHash = str(sha256_hash.hexdigest())
+                print("Verificando Hash")
+                if newFileHash == data['hash']:
+                    print(f"\nHash Download: {newFileHash}\nHash Server: {data['hash']}\n")
+                    print("\nHash Igual\n")
+                else:
+                    print("\nHash diferente, erro ao baixar arquivo\n")
+
         elif data['status'] == 'Close':
             break
             

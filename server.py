@@ -58,6 +58,7 @@ def handle_info(info, conn):
     
     elif info['process'] == 'arquivo': # se arquivo
         status = 'OK'
+
         try:
             sha256_hash = hashlib.sha256() # define o hash
             info['fileSize'] = str(os.path.getsize(info['file'])) # tamanho do arquivo
