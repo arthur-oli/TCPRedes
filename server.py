@@ -34,13 +34,18 @@ def pickle_format(info):
 def handle_info(info, conn):
     if info['process'] == 'chat': # se é o chat o escolhido
         info['status'] = 'Chat'
-        if info['message'].lower() == 'sair do chat': # arrumar essa parte << quando o cliente manda sair do chat ele ainda pede uma msg do servidor
-            return False
+        if info['message'].lower() == 'sair do chat':
+            info['status'] = 'ChatEnd'
+            p = pickle_format(info)
+            conn.send(p)
         
-        print("Cliente: " + info['message'])
-        info['message'] = input('Digite sua mensagem: ') # pede a mensagem pro server
-        p = pickle_format(info)
-        conn.send(p)
+        else:
+            print("Cliente: " + info['message'])
+            info['message'] = input('Digite sua mensagem: ') # pede a mensagem pro server
+            if info['message'].lower() == 'sair do chat':
+                info['status'] = 'ChatEnd'
+            p = pickle_format(info)
+            conn.send(p)
 
         return True
 

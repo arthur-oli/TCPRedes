@@ -30,19 +30,25 @@ def main():
             info['process'] = "sair"
         elif message.lower() == "chat":
             info['process'] = "chat"
-            message = input('Digite sua mensagem: ')
-            while message.lower() != 'sair do chat': # enquanto nao for digitado sair do chat, mantém no loop
+            continuar = True
+            while continuar: # enquanto nao for digitado sair do chat, mantém no loop
+                message = input('Digite sua mensagem: ')
                 info['message'] = message
                 s.send(pickle_format(info))
+
                 data = s.recv(1024)
                 data = pickle.loads(data[HEADERSIZE:])
+
+                if message.lower() == 'sair do chat' or data['status'] == 'ChatEnd':
+                    continuar = False
+                    break
+
                 if data['status'] == 'Chat':
                     print("Servidor: " + data['message'])
-                message = input('Digite sua mensagem: ')
 
         else:
-            info['file'] = message      
-
+            info['file'] = message     
+             
         s.send(pickle_format(info))
  
         # mensagem recebida do servidor
@@ -54,8 +60,6 @@ def main():
             print(f"File name : {data['file']} \nStatus: {data['status']} \nFile size: {data['fileSize']} \nHash: {data['hash']} \nContent: {data['content']}")
         elif data['status'] == 'Close':
             break
-        else:
-            print(data['status'])
             
     s.close()
         
