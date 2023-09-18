@@ -1,4 +1,4 @@
-# Import socket module
+# importando biblioteca de socket
 import socket
  
  
@@ -6,29 +6,27 @@ def Main():
     # local host IP '127.0.0.1'
     host = '127.0.0.1'
  
-    # Define the port on which you want to connect
+    # porta definida
     port = 12345
  
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
  
-    # connect to server on local computer
+    # conectar no server do computador local
     s.connect((host,port))
  
-    # message you send to server
-    
     while True:
  
         message = input('\nDeseja (Sair) ou ler um (Arquivo NOME.EXT) :')
-        # message sent to server
+        # mensagem enviada para o servidor
         s.send(message.encode('ascii'))
  
-        # message received from server
+        # mensagem recebida do servidor
         data = s.recv(1024)
  
-        # print the received message
+        # printa a mensagem recebida
         print('Received from the server :', str(data.decode('ascii')))
 
-    # close the connection
+    # fecha a conexão
     s.close()
  
 if __name__ == '__main__':

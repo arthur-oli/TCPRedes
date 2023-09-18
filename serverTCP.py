@@ -1,47 +1,36 @@
-# No servidor TCP (deve executar antes do cliente)
-# Criar uma thread com a conexão do cliente (para cada cliente). Na thread:
-# Receber requisições enviadas pelo cliente:
-# “Sair”
-# se sim: fechar a conexão.
-# Finalizar a thread.
-# “Arquivo” + NOME.EXT:
-# Abrir o arquivo solicitado.
-# Calcular o (Hash) do arquivo com SHA (Procure um exemplo de uso do SHA), que serve como verificador de integridade.
-# Escolher a ordem/como enviar (Atenção! Este será o seu protocolo, você define.)
-# Nome do arquivo
-# Tamanho
-# Hash
-# Dados
-# Status (ok, nok, etc…)
-# Ex.: arquivo inexistente.
+# importando biblioteca de hash
 import hashlib
+
+#importando biblioteca de sistema operacional, para ver o tamanho do arquivo
 import os
-# import socket programming library
+
+# importando biblioteca de socket
 import socket
  
-# import thread module
+# importando multithreading
 from _thread import *
 import threading
  
 print_lock = threading.Lock()
  
-# thread function
+# thread
 def threaded(c):
     while True:
  
-        # data received from client
+        # dados recebidos do cliente
         data = c.recv(1024)
         data = data.decode('ascii')
         print(data)
         if not data:
             print('Bye')
              
-            # lock released on exit
+            # liberando o travamento da thread
             print_lock.release()
             break
             
         if data == 'Sair':
             print('Conexao fechada')
+            c.send(data.encode('ascii'))
             print_lock.release()
             break
 
@@ -57,47 +46,52 @@ def threaded(c):
                         sha256_hash.update(bloco)
                         hash_hex = str(sha256_hash.hexdigest())
 
-                data = "Nome : " + fileName + '\n'
-                data += "Tamanho : " + fileSize + '\n'
-                data += "Hash : " + hash_hex + '\n'
-                data += "Conteudo : " + content + '\n'
-                data += "Status : " + 'ok'
+                data = "\nNome : " + fileName + '\n'
+                c.send(data.encode('ascii'))
+                data = "Tamanho : " + fileSize + '\n'
+                c.send(data.encode('ascii'))
+                data = "Hash : " + hash_hex + '\n'
+                c.send(data.encode('ascii'))
+                data = "Conteudo : " + content + '\n'
+                c.send(data.encode('ascii'))
+                data = "Status : " + 'ok'
+                c.send(data.encode('ascii'))
             
             except FileNotFoundError:
-                status = 'fnf'
+                status = 'nok'
             except Exception as e:
                 print(f"Ocorreu um erro com o arquivo: {str(e)}")
         
         c.send(data.encode('ascii'))
  
-    # connection closed
+    # fechando a conexão
     c.close()
  
  
 def Main():
     host = ""
  
-    # reserve a port on your computer
+    # porta do computador (qualquer uma acima de 1024)
     port = 12345
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((host, port))
     print("socket binded to port", port)
  
-    # put the socket into listening mode
+    # modo ouvinte para o socket
     s.listen(5)
     print("socket is listening")
  
-    # a forever loop until client wants to exit
+    # loop infinito até a condição de parada
     while True:
  
-        # establish connection with client
+        # estabelecida a conexão com o cliente
         c, addr = s.accept()
  
-        # lock acquired by client
+        # trava adquirida pelo cliente
         print_lock.acquire()
         print('Connected to :', addr[0], ':', addr[1])
  
-        # Start a new thread and return its identifier
+        # inicia uma nova thread
         start_new_thread(threaded, (c,))
     s.close()
  
